@@ -1,0 +1,497 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#123c2b">
+<title>Parking Fácil</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #123c2b;
+    color: #173c2c;
+}
+
+.app {
+    max-width: 480px;
+    margin: auto;
+}
+
+header {
+    color: white;
+    text-align: center;
+    padding: 12px 0 22px;
+}
+
+.logo {
+    font-size: 42px;
+    margin-bottom: 8px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 27px;
+}
+
+header p {
+    color: #c7ded1;
+    margin-bottom: 0;
+}
+
+.card {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 5px 18px #071e1533;
+}
+
+h2 {
+    font-size: 17px;
+    margin: 0 0 16px;
+}
+
+label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.time-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 9px;
+}
+
+select {
+    width: 100%;
+    padding: 13px 5px;
+    border: 1px solid #d4e1d9;
+    border-radius: 10px;
+    background: #f8faf8;
+    color: #173c2c;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    border: none;
+    border-radius: 11px;
+    padding: 15px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.primary {
+    background: #176b43;
+    color: white;
+    margin-top: 16px;
+}
+
+.secondary {
+    background: #eaf2ed;
+    color: #176b43;
+    margin-top: 10px;
+}
+
+button:active {
+    transform: scale(0.99);
+}
+
+.status {
+    color: #54705f;
+    font-size: 13px;
+    margin-top: 12px;
+    text-align: center;
+}
+
+.hidden { display: none; }
+
+.summary {
+    background: #eaf5ee;
+    border-radius: 13px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 18px;
+}
+
+.summary .caption {
+    font-size: 13px;
+    color: #52715f;
+}
+
+.total {
+    font-size: 39px;
+    font-weight: bold;
+    color: #176b43;
+    margin: 7px 0;
+}
+
+.elapsed {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 13px 0;
+    border-bottom: 1px solid #e8eee9;
+}
+
+.row:last-child { border-bottom: none; }
+
+.row-title {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.row-detail {
+    color: #64776b;
+    font-size: 12px;
+    margin-top: 5px;
+    line-height: 1.5;
+}
+
+.amount {
+    font-weight: bold;
+    white-space: nowrap;
+    font-size: 15px;
+}
+
+.explanation {
+    background: #fff6df;
+    border-left: 4px solid #e5ad35;
+    padding: 13px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-top: 15px;
+    color: #614b19;
+}
+
+.tolerance {
+    font-size: 13px;
+    color: #54705f;
+    margin-top: 14px;
+}
+
+.footer {
+    text-align: center;
+    color: #c7ded1;
+    font-size: 12px;
+    padding: 4px 0 16px;
+}
+
+@media (max-width: 360px) {
+    body { padding: 12px; }
+    .card { padding: 15px; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+    <div class="logo">🚘</div>
+    <h1>PARKING FÁCIL</h1>
+    <p>Control sencillo de tiempo y cobro</p>
+</header>
+
+<section class="card">
+    <h2>🕒 Registrar hora de entrada</h2>
+
+    <label>Hora de entrada</label>
+
+    <div class="time-fields">
+        <select id="hour" aria-label="Hora"></select>
+        <select id="minute" aria-label="Minutos"></select>
+        <select id="period" aria-label="AM o PM">
+            <option value="AM">AM</option>
+            <option value="PM">PM</option>
+        </select>
+    </div>
+
+    <button class="primary" onclick="registerEntry()">
+        Registrar entrada
+    </button>
+
+    <div id="status" class="status">
+        Selecciona la hora de ingreso del vehículo.
+    </div>
+</section>
+
+<section id="result" class="card hidden">
+    <h2>📋 Detalle del cobro</h2>
+
+    <div class="summary">
+        <div class="caption">TOTAL A COBRAR</div>
+        <div id="total" class="total">S/ 0.00</div>
+        <div id="elapsed" class="elapsed">0 h 0 min</div>
+    </div>
+
+    <div class="row">
+        <div>
+            <div class="row-title">Hora de entrada</div>
+            <div id="entryDisplay" class="row-detail"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div>
+            <div class="row-title">Hora de salida</div>
+            <div id="exitDisplay" class="row-detail"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div>
+            <div class="row-title">Tiempo transcurrido</div>
+            <div id="timeDisplay" class="row-detail"></div>
+        </div>
+    </div>
+
+    <h2 style="margin-top:20px; margin-bottom:0;">
+        Desglose del importe
+    </h2>
+
+    <div id="breakdown"></div>
+
+    <div id="explanation" class="explanation"></div>
+
+    <div id="tolerance" class="tolerance"></div>
+
+    <button class="secondary" onclick="newQuery()">
+        Nueva consulta
+    </button>
+</section>
+
+<div class="footer">
+    Tarifa: S/ 3 por hora · Tolerancia: 5 minutos
+</div>
+
+</div>
+
+<script>
+const RATE = 3;
+const TOLERANCE = 5;
+
+let entryTime = null;
+let updateTimer = null;
+
+const hourSelect = document.getElementById("hour");
+const minuteSelect = document.getElementById("minute");
+const periodSelect = document.getElementById("period");
+
+for (let h = 1; h <= 12; h++) {
+    const option = document.createElement("option");
+    option.value = h;
+    option.textContent = String(h).padStart(2, "0");
+    hourSelect.appendChild(option);
+}
+
+for (let m = 0; m < 60; m++) {
+    const option = document.createElement("option");
+    option.value = m;
+    option.textContent = String(m).padStart(2, "0");
+    minuteSelect.appendChild(option);
+}
+
+function formatTime(date) {
+    return date.toLocaleTimeString("es-PE", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+    }).replace(/\./g, "");
+}
+
+function formatCurrency(amount) {
+    return "S/ " + amount.toFixed(2);
+}
+
+function registerEntry() {
+    const now = new Date();
+
+    let hour = Number(hourSelect.value);
+    const minute = Number(minuteSelect.value);
+    const period = periodSelect.value;
+
+    if (period === "PM" && hour !== 12) {
+        hour += 12;
+    }
+
+    if (period === "AM" && hour === 12) {
+        hour = 0;
+    }
+
+    const selectedEntry = new Date(now);
+    selectedEntry.setHours(hour, minute, 0, 0);
+
+    // Si la hora seleccionada es posterior a la hora actual,
+    // se considera que la entrada fue el día anterior.
+    if (selectedEntry.getTime() > now.getTime()) {
+        selectedEntry.setDate(selectedEntry.getDate() - 1);
+    }
+
+    entryTime = selectedEntry;
+
+    document.getElementById("result").classList.remove("hidden");
+    document.getElementById("status").textContent =
+        "Entrada registrada: " + formatTime(entryTime);
+
+    if (updateTimer) {
+        clearInterval(updateTimer);
+    }
+
+    updateResult();
+    updateTimer = setInterval(updateResult, 15000);
+}
+
+function updateResult() {
+    if (!entryTime) return;
+
+    const now = new Date();
+
+    let elapsedMinutes = Math.floor(
+        (now.getTime() - entryTime.getTime()) / 60000
+    );
+
+    elapsedMinutes = Math.max(0, elapsedMinutes);
+
+    const completeHours = Math.floor(elapsedMinutes / 60);
+    const extraMinutes = elapsedMinutes % 60;
+
+    // Cada hora cuesta S/ 3.
+    // Hasta 5 minutos adicionales se mantienen dentro
+    // de la tarifa anterior. Desde el minuto 6 se cobra
+    // una fracción adicional de hora.
+    let chargedHours;
+
+    if (elapsedMinutes <= 60) {
+        chargedHours = 1;
+    } else if (extraMinutes <= TOLERANCE) {
+        chargedHours = completeHours;
+    } else {
+        chargedHours = completeHours + 1;
+    }
+
+    const total = chargedHours * RATE;
+
+    document.getElementById("total").textContent =
+        formatCurrency(total);
+
+    document.getElementById("elapsed").textContent =
+        completeHours + " h " + extraMinutes + " min";
+
+    document.getElementById("entryDisplay").textContent =
+        formatTime(entryTime);
+
+    document.getElementById("exitDisplay").textContent =
+        formatTime(now);
+
+    document.getElementById("timeDisplay").textContent =
+        completeHours + " horas completas y " +
+        extraMinutes + " minutos adicionales.";
+
+    const breakdown = document.getElementById("breakdown");
+    breakdown.innerHTML = "";
+
+    for (let i = 1; i <= chargedHours; i++) {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const details = document.createElement("div");
+        const title = document.createElement("div");
+        title.className = "row-title";
+
+        const detail = document.createElement("div");
+        detail.className = "row-detail";
+
+        const start = new Date(entryTime.getTime() + (i - 1) * 3600000);
+        const end = new Date(start.getTime() + 3600000);
+
+        if (i <= completeHours) {
+            title.textContent = "Hora completa " + i;
+            detail.textContent =
+                formatTime(start) + " – " + formatTime(end);
+        } else {
+            title.textContent = "Fracción de la hora " + i;
+            detail.textContent =
+                formatTime(start) + " – " + formatTime(now);
+        }
+
+        details.appendChild(title);
+        details.appendChild(detail);
+
+        const amount = document.createElement("div");
+        amount.className = "amount";
+        amount.textContent = formatCurrency(RATE);
+
+        row.appendChild(details);
+        row.appendChild(amount);
+        breakdown.appendChild(row);
+    }
+
+    let message;
+
+    if (elapsedMinutes <= 60) {
+        message =
+            "Se cobra la tarifa de la primera hora: S/ 3.00.";
+    } else if (extraMinutes === 0) {
+        message =
+            "El tiempo coincide con una hora exacta. " +
+            "No hay minutos adicionales.";
+    } else if (extraMinutes <= TOLERANCE) {
+        message =
+            completeHours + " horas completas + " +
+            extraMinutes + " minutos adicionales. " +
+            "Los minutos adicionales están dentro de la " +
+            "tolerancia de " + TOLERANCE +
+            " minutos. No se cobra otra fracción.";
+    } else {
+        message =
+            completeHours + " horas completas + " +
+            extraMinutes + " minutos adicionales. " +
+            "Se superó la tolerancia de " + TOLERANCE +
+            " minutos, por lo que se cobra una fracción " +
+            "adicional de hora por S/ " + RATE.toFixed(2) + ".";
+    }
+
+    document.getElementById("explanation").textContent = message;
+
+    if (extraMinutes === 0) {
+        document.getElementById("tolerance").textContent =
+            "Minutos adicionales: 0.";
+    } else {
+        document.getElementById("tolerance").textContent =
+            "Minutos adicionales: " + extraMinutes +
+            " · Tolerancia permitida: " + TOLERANCE + " min.";
+    }
+}
+
+function newQuery() {
+    entryTime = null;
+
+    if (updateTimer) {
+        clearInterval(updateTimer);
+        updateTimer = null;
+    }
+
+    document.getElementById("result").classList.add("hidden");
+    document.getElementById("status").textContent =
+        "Selecciona la hora de ingreso del vehículo.";
+}
+</script>
+</body>
+</html>
